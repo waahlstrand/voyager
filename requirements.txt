@@ -1,0 +1,9 @@
+pandas
+numpy
+pyyaml
+xarray
+opencv-python
+geopy
+scipy
+dask
+netcdf4
