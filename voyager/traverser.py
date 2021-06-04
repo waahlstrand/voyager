@@ -78,6 +78,47 @@ class Traverser:
             # Use the interpolated values in the model
             model.use(chart)
 
+            trajectories = []
+
+            for vessel in vessels:
+
+                trajectories.append(model.run(vessel))
+
+            # Add the trajectories for the date
+            results.update({date.strftime('%Y-%m-%d'): trajectories})
+
+        return results
+
+
+    def run_mp(self, model_kwargs={}, chart_kwargs={}):
+
+        # The chart object keeps track of the region of interest
+        # and the wind/current data for that region
+        # It is shared by all vessels
+        chart = Chart(self.bbox, self.start_date, self.end_date).load(self.data_directory, **chart_kwargs)
+        
+        # The model object describes the equations of movement and
+        # traversal across the oceans over time
+        model = Model(self.duration, self.dt, **model_kwargs)
+
+        results = {}
+        for date in self.dates[::self.launch_day_frequency]:
+
+            # Vessel objects are the individual agents traversing the ocean
+            vessels = Vessel.from_positions(self.departure_points, 
+                                            craft = self.craft,
+                                            chart = chart, 
+                                            destination = self.destination, 
+                                            speed = self.speed, 
+                                            mode = self.mode, 
+                                            vessel_config=self.vessel_config)
+            
+            # Interpolate the data for only the duration specified
+            chart.interpolate(date, self.duration)
+
+            # Use the interpolated values in the model
+            model.use(chart)
+
             with mp.Pool(mp.cpu_count()) as p:
 
                 trajectories = p.map(model.run, vessels)
