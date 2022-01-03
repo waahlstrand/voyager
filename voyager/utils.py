@@ -46,31 +46,61 @@ def save_to_GeoJSON(data, filename):
         json.dump(format_dict, file, indent=4)
 
 
-def to_GeoJSON(data):
+def to_GeoJSON(vessel, start_date, stop_date, dt):
 
     format_dict = {"type": "FeatureCollection",
-                   "features": []}
+                   "features": []
+                   }
 
-    for date_key, vessels in data.items():
-        # print(date_key, vessels)
+    format_dict["features"].append(
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                # "coordinates": [[y, x] for x, y in vessel.trajectory],
+                "coordinates": vessel.trajectory,
 
-        for vessel in vessels:
+            },
+            "properties": {
+                "start_date": start_date,
+                "stop_date": stop_date,
+                "timestep": dt,
+                "distance": vessel.distance,
+                "mean_speed": vessel.mean_speed,
+                "destination": vessel.destination,
+                "route": vessel.route_taken
+            }          
+        }
+    )
 
-            d = {"type": "Feature", 
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": vessel.trajectory
-                },
-                "properties": {
-                    "date": date_key,
-                    "number of points": len(vessel.trajectory),
-                    "distance": vessel.distance,
-                    "mean speed": vessel.mean_speed
-                }}
+    return format_dict
 
-            format_dict["features"].append(d)  
 
-    return format_dict                
+# def to_GeoJSON(data):
+
+#     format_dict = {"type": "FeatureCollection",
+#                    "features": []}
+
+#     for date_key, vessels in data.items():
+#         # print(date_key, vessels)
+
+#         for vessel in vessels:
+
+#             d = {"type": "Feature", 
+#                 "geometry": {
+#                     "type": "LineString",
+#                     "coordinates": vessel.trajectory
+#                 },
+#                 "properties": {
+#                     "date": date_key,
+#                     "number of points": len(vessel.trajectory),
+#                     "distance": vessel.distance,
+#                     "mean speed": vessel.mean_speed
+#                 }}
+
+#             format_dict["features"].append(d)  
+
+#     return format_dict                
 
 
 

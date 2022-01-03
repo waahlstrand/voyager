@@ -3,7 +3,6 @@ from . import geo, search
 import numpy as np
 import yaml
 
-
 class Vessel:
 
     def __init__(self, x, 
@@ -30,6 +29,7 @@ class Vessel:
         self.mean_speed = 0
 
         self.route  = route
+        self.route_taken = [[float(x),float(y)] for x,y in self.route]
         self.target = self.route.pop()
 
         # Read the features of the vessel
@@ -40,43 +40,53 @@ class Vessel:
 
 
     @classmethod
+    def from_position(cls, point, chart=None, destination=None, interval=5, **kwargs):
+
+        x, y = point
+
+        if (destination is not None) and (chart is not None):
+
+            # Find the closest latlon to the start and destination
+            i = geo.closest_coordinate_index(chart.longitudes, x)
+            j = geo.closest_coordinate_index(chart.latitudes, y)
+
+            i_goal = geo.closest_coordinate_index(chart.longitudes, destination[0])
+            j_goal = geo.closest_coordinate_index(chart.latitudes, destination[1]) 
+
+            # Find the optimal route to the target
+            astar = search.Astar(chart.grid)
+            came_from, cost_so_far = astar.search(start=(j, i), goal=(j_goal, i_goal))
+
+            # Chart the route
+            try:
+                route = astar.reconstruct_path(came_from, start=(j, i), goal=(j_goal, i_goal))
+                route = [(chart.longitudes[i], chart.latitudes[j]) for j, i in route]
+                route = [route[0], *route[1:-2:interval], route[-1]]
+                route.reverse()
+
+            except:
+                print("No possible route.")
+                return None
+
+
+            # Create a vessel
+            vessel = cls(x, y, route=route, destination=destination, **kwargs)
+
+        else:
+
+            # Create a vessel without a route
+            vessel = cls(x, y, destination=destination, **kwargs)
+
+        return vessel
+
+
+    @classmethod
     def from_positions(cls, points, chart=None, destination=None, interval=5, **kwargs):
         
         vessels = []
-        for x, y in points:
+        for point in points:
 
-            if (destination is not None) and (chart is not None):
-
-                # Find the closest latlon to the start and destination
-                i = geo.closest_coordinate_index(chart.longitudes, x)
-                j = geo.closest_coordinate_index(chart.latitudes, y)
-
-                i_goal = geo.closest_coordinate_index(chart.longitudes, destination[0])
-                j_goal = geo.closest_coordinate_index(chart.latitudes, destination[1]) 
-
-                # Find the optimal route to the target
-                astar = search.Astar(chart.grid)
-                came_from, cost_so_far = astar.search(start=(j, i), goal=(j_goal, i_goal))
-
-                # Chart the route
-                try:
-                    route = astar.reconstruct_path(came_from, start=(j, i), goal=(j_goal, i_goal))
-                    route = [(chart.longitudes[i], chart.latitudes[j]) for j, i in route]
-                    route = [route[0], *route[1:-2:interval], route[-1]]
-                    route.reverse()
-
-                except:
-                    print("No possible route.")
-                    return None
-
-
-                # Create a vessel
-                vessel = cls(x, y, route=route, **kwargs)
-
-            else:
-
-                # Create a vessel without a route
-                vessel = cls(x, y, **kwargs)
+            vessel = cls.from_position(point, chart, destination, interval, kwargs)
 
             vessels.append(vessel)
 
@@ -135,3 +145,13 @@ class Vessel:
                 return True
         else:
             return False
+
+    def to_dict(self):
+
+        return {
+            "trajectory": self.trajectory,
+            "distance": self.distance,
+            "route": self.route_taken,
+            "mean_speed": self.mean_speed,
+            "destination": self.destination
+        }

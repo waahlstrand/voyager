@@ -1,10 +1,12 @@
 import multiprocessing as mp
+
+from geopy import util
 from voyager import vessel
 
 import pandas as pd
 from .chart import Chart
 from .models import Vessel, Model
-
+from . import utils
 
 class Traverser:
 
@@ -47,6 +49,62 @@ class Traverser:
 
         # Starting points for trajectories
         self.departure_points = departure_points
+
+    @classmethod
+    def trajectory(
+            cls,
+            mode = 'drift', 
+            craft = 1, 
+            duration = 60,
+            timestep = 1, 
+            destination = [], 
+            speed = 2, 
+            date = '', 
+            bbox = [], 
+            departure_point = [], 
+            data_directory = '', 
+            vessel_config='configs/vessels.yml',
+            chart_kwargs = {}, 
+            model_kwargs = {}, 
+            chart = None, 
+            model = None):
+
+
+        # The chart object keeps track of the region of interest
+        # and the wind/current data for that region
+        # It is shared by all vessels
+        if not chart:
+            start_date = pd.to_datetime(date, infer_datetime_format=True)
+            end_date   = start_date + pd.Timedelta(duration, unit='days')
+            chart = Chart(bbox, start_date, end_date).load(data_directory, **chart_kwargs)
+        
+        # The model object describes the equations of movement and
+        # traversal across the oceans over time
+        if not model:
+            model = Model(duration, timestep, **model_kwargs)
+
+        vessel = Vessel.from_position(departure_point, 
+                                      craft = craft,
+                                      chart = chart,
+                                      destination = destination,
+                                      speed =speed,
+                                      mode = mode,
+                                      vessel_config=vessel_config)
+
+        # Interpolate the data for only the duration specified
+        chart.interpolate(chart.start_date, duration)
+
+        # Use the interpolated values in the model
+        model.use(chart)
+
+        # Run the model
+        vessel = model.run(vessel)
+
+        start_date_str = chart.start_date.strftime('%Y-%m-%d')
+        stop_date_str  = (chart.start_date + pd.Timedelta(len(vessel.trajectory)*timestep, unit='s')).strftime('%Y-%m-%d')
+
+        return utils.to_GeoJSON(vessel, start_date_str, stop_date_str, timestep)
+
 
 
     def run(self, model_kwargs={}, chart_kwargs={}):
