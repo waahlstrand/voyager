@@ -63,7 +63,7 @@ class Traverser:
             bbox = [], 
             departure_point = [], 
             data_directory = '', 
-            vessel_config='configs/vessels.yml',
+            vessel_params= {},
             chart_kwargs = {}, 
             model_kwargs = {}, 
             chart = None, 
@@ -89,7 +89,7 @@ class Traverser:
                                       destination = destination,
                                       speed =speed,
                                       mode = mode,
-                                      vessel_config=vessel_config)
+                                      params = vessel_params[mode][craft])
 
         # Interpolate the data for only the duration specified
         chart.interpolate(chart.start_date, duration)

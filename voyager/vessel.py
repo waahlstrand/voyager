@@ -13,7 +13,8 @@ class Vessel:
                        destination = None,
                        launch_date = None,
                        speed = 0,
-                       vessel_config='configs/vessels.yml'):
+                       params = {}
+                       ):
 
         self.craft = craft
         self.mode = mode
@@ -33,15 +34,11 @@ class Vessel:
         self.target = self.route.pop()
 
         # Read the features of the vessel
-        with open(vessel_config, 'r') as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
-
-        self.params = config[self.mode][self.craft]
+        self.params = params
 
 
     @classmethod
     def from_position(cls, point, chart=None, destination=None, interval=5, **kwargs):
-
         x, y = point
 
         if (destination is not None) and (chart is not None):
