@@ -1,0 +1,107 @@
+drifting:
+  1:
+    name: 'sampan'
+    Sl: 0.04
+    Yt: 0.00
+    Da: 48
+  2:
+    name: 'skiff'
+    Sl: 0.03
+    Yt: 0.08
+    Da: 15
+  3:
+    name: 'sailboat'
+    Sl: 0.03
+    Yt: 0.00
+    Da: 48
+  4:
+    name: 'sail raft'
+    Sl: 0.08
+    Yt: -0.17
+    Da: 33
+  5:
+    name: 'no sail raft'
+    Sl: 0.015
+    Yt: 0.17
+    Da: 17
+  6:
+    name: 'sea kayak'
+    Sl: 0.011
+    Yt: 0.24
+    Da: 15
+  7:
+    name: 'levison'
+    Sl: 0
+    Yt: 0
+    Da: 0
+
+sailing:
+  1:
+    name: 'sailing raft'
+    mt: 120
+    wf 110-120: 0.05
+    wf 100-110: 0.11
+    wf 80-100: 0.14
+    wf 40-80: 0.17
+    wf 0-40: 0.14
+  2:
+    name: 'slow canoe'
+    mt: 120
+    wf 110-120: 0.025
+    wf 100-110: 0.32
+    wf 80-100: 0.34
+    wf 40-80: 0.35
+    wf 0-40: 0.32
+  3:
+    name: 'intermediary canoe'
+    mt: 120
+    wf 110-120: 0.37
+    wf 100-110: 0.41
+    wf 80-100: 0.45
+    wf 40-80: 0.43
+    wf 0-40: 0.37
+  4:
+    name: 'fast canoe'
+    mt: 120
+    wf 110-120: 0.53
+    wf 100-110: 0.60
+    wf 80-100: 0.61
+    wf 40-80: 0.55
+    wf 0-40: 0.47
+
+paddling:
+  1:
+    name: 'sampan'
+    Sl: 0.04
+    Yt: 0.00
+    Da: 48
+  2:
+    name: 'skiff'
+    Sl: 0.03
+    Yt: 0.08
+    Da: 15
+  3:
+    name: 'sailboat'
+    Sl: 0.03
+    Yt: 0.00
+    Da: 48
+  4:
+    name: 'sail raft'
+    Sl: 0.08
+    Yt: -0.17
+    Da: 33
+  5:
+    name: 'no sail raft'
+    Sl: 0.015
+    Yt: 0.17
+    Da: 17
+  6:
+    name: 'sea kayak'
+    Sl: 0.011
+    Yt: 0.24
+    Da: 15
+  7:
+    name: 'levison'
+    Sl: 0
+    Yt: 0
+    Da: 0

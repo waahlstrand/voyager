@@ -1,0 +1,30 @@
+vessels:
+  path: './configs/vessels.yml'
+
+data:
+  path: '/home/vws/projects/voyager_old/data'
+
+chart:
+  weights: [200, 50, 10, 500]
+  iterations: [25, 8, 4, 2]
+  # weights: [100, 50, 0.5]
+  # iterations: [1,8,3]
+
+model:
+  tolerance: 0.005
+  sigma: 5000
+
+dask:
+  'array.slicing.split_large_chunks': true
+
+example:
+  start_date: '2017-01-01'
+  end_date: '2017-01-30'
+  launch_freq: 8
+  duration: 14
+  timestep: 7200
+  mode: 'sailing'
+  craft: 2
+  speed: ~
+  destination: [2.347, 52.084]
+  departure_points: [[4.474, 58.962], [7.655, 54.718]]
