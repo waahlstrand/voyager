@@ -61,9 +61,9 @@ class Vessel:
                 route = [route[0], *route[1:-2:interval], route[-1]]
                 route.reverse()
 
-            except:
+            except Exception as e:
                 print("No possible route.")
-                return None
+                raise RuntimeError("No possible route") from e
 
 
             # Create a vessel

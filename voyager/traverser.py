@@ -1,7 +1,6 @@
 import multiprocessing as mp
 
-from geopy import util
-from voyager import vessel
+import dask
 
 import pandas as pd
 from .chart import Chart
@@ -73,6 +72,7 @@ class Traverser:
         # The chart object keeps track of the region of interest
         # and the wind/current data for that region
         # It is shared by all vessels
+        
         if not chart:
             start_date = pd.to_datetime(date, infer_datetime_format=True)
             end_date   = start_date + pd.Timedelta(duration, unit='days')
@@ -83,6 +83,7 @@ class Traverser:
         if not model:
             model = Model(duration, timestep, **model_kwargs)
 
+        
         vessel = Vessel.from_position(departure_point, 
                                       craft = craft,
                                       chart = chart,

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
+import dask
 
 from . import utils
 from . import search
@@ -27,17 +28,19 @@ class Chart:
 
         self.data_dir = data_dir
 
-        self.u_current_all, self.v_current_all  = utils.load_data(start=self.start_date, 
-                                                                  end=self.end_date,
-                                                                  bbox=self.bbox,
-                                                                  data_directory=self.data_dir,
-                                                                  source="currents")
+        with dask.config.set(**{'array.slicing.split_large_chunks': True}):
 
-        self.u_wind_all, self.v_wind_all        = utils.load_data(start=self.start_date, 
-                                                                  end=self.end_date,
-                                                                  bbox=self.bbox,
-                                                                  data_directory=self.data_dir,
-                                                                  source="winds")
+            self.u_current_all, self.v_current_all  = utils.load_data(start=self.start_date, 
+                                                                    end=self.end_date,
+                                                                    bbox=self.bbox,
+                                                                    data_directory=self.data_dir,
+                                                                    source="currents")
+
+            self.u_wind_all, self.v_wind_all        = utils.load_data(start=self.start_date, 
+                                                                    end=self.end_date,
+                                                                    bbox=self.bbox,
+                                                                    data_directory=self.data_dir,
+                                                                    source="winds")
 
 
         map          = self.u_current_all.sel(time=self.start_date)
