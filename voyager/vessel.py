@@ -1,5 +1,6 @@
 
-from . import geo, search, chart
+from . import geo, search
+# from .chart import Chart
 import numpy as np
 from typing import *
 
@@ -38,7 +39,7 @@ class Vessel:
 
 
     @classmethod
-    def from_position(cls, point: Tuple[float, float], chart: chart.Chart = None, destination: Tuple[float, float] = None, interval: int =5, **kwargs):
+    def from_position(cls, point: Tuple[float, float], chart = None, destination: Tuple[float, float] = None, interval: int =5, **kwargs):
         """Creates a vessel from a start position, using a pre-supplied Chart object and destination.
         The chart and interval parameters are used to create a route from the start position and the destination, the interval
         deciding the number of milestones along the way.
@@ -95,7 +96,7 @@ class Vessel:
 
 
     @classmethod
-    def from_positions(cls, points: List[Tuple[float, float]], chart: chart.Chart = None, destination: Tuple[float, float] = None, interval: int = 5, **kwargs) -> List:
+    def from_positions(cls, points: List[Tuple[float, float]], chart= None, destination: Tuple[float, float] = None, interval: int = 5, **kwargs) -> List:
         """Generates a list of vessels from multiple positions.
             The chart and interval parameters are used to create a route from the start position and the destination, the interval
             deciding the number of milestones along the way.
