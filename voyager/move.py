@@ -1,5 +1,6 @@
 from . import geo
 import numpy as np
+from typing import *
 
 class Displacement:
 
@@ -10,7 +11,19 @@ class Displacement:
         self.dt     = dt
         self.dxy = None
 
-    def move(self, c, w):
+    def move(self, c: np.ndarray, w: np.ndarray):
+        """Creates the displacement due to a current and wind velocity.
+
+        Args:
+            c (np.ndarray): current velocity
+            w (np.ndarray): wind velocity
+
+        Raises:
+            ValueError: Raised if the model displacement is not drifting, paddling or sailing
+
+        Returns:
+            Displacement: The Displacement instance
+        """
 
         if self.vessel.mode == 'drifting':
             return self.from_drift(c, w)
@@ -25,18 +38,18 @@ class Displacement:
             raise ValueError("Mode of displacement should be drifting, paddling or sailing")
 
     @staticmethod
-    def leeway_displacement(w, Sl, Yt, dt):
+    def leeway_displacement(w: np.ndarray, Sl: float, Yt: float, dt: float):
         """Calculates the leeway displacement from vessel parameters 
         and wind speed.
 
         Args:
-            w (np.array): The wind velocity with two components
+            w (np.ndarray): The wind velocity with two components
             Sl (float): vessel parameter
             Yt (float): vessel parameter
             dt (float): Time step
 
         Returns:
-            np.array: The displacement due to leeway wind
+            np.ndarray: The displacement due to leeway wind
         """
 
         # Calculate leeway velocity from wind
@@ -45,22 +58,23 @@ class Displacement:
         # Convert leeway to m/s from knots
         leeway = Displacement.knots_to_si(leeway)
 
+        # Calculate displacement
         dxy_leeway = leeway * dt
 
         return dxy_leeway
 
     @staticmethod
-    def leeway_velocity(w, Sl, Yt):
+    def leeway_velocity(w: np.ndarray, Sl: float, Yt: float) -> np.ndarray:
         """Calculates the leeway wind velocity from vessel parameters and
         wind speed.
 
         Args:
-            w (np.array): The wind velocity with two components
+            w (np.ndarray): The wind velocity with two components
             Sl (float): vessel parameter
             Yt (float): vessel parameter
 
         Returns:
-            np.array: The velocity from leeway wind
+            np.ndarray: The velocity from leeway wind
         """
 
         # Convert from m/s to knots
@@ -81,11 +95,25 @@ class Displacement:
         return leeway
 
     @staticmethod
-    def levison_leeway_displacement(w, dt):
+    def levison_leeway_displacement(w: np.ndarray, dt: float):
+        """Calculates the displacement due to leeway forces,
+        using the Levison method.
+
+        Args:
+            w (np.ndarray): Wind velocity
+            dt (float): Timestep
+
+        Raises:
+            ValueError: Raised if the absolute wind velocity is a non-positive number
+
+        Returns:
+            np.ndarray: The displacement due to leeway forces
+        """
 
         # Convert from m/s to knots
         w = Displacement.si_to_knots(w)
 
+        # Prefill the leeway velocity
         leeway = np.zeros_like(w)
 
         for idx in (0, 1):
@@ -114,7 +142,7 @@ class Displacement:
             elif w_abs > 40:
                 leeway[idx] = 4.5
             else:
-                raise RuntimeError
+                raise ValueError(f"Invalid absolute velocity {w_abs}")
 
             leeway[idx] *= w_sign
 
@@ -126,7 +154,7 @@ class Displacement:
 
 
     @staticmethod
-    def rotate(x, angle):
+    def rotate(x: np.ndarray, angle: float) -> np.ndarray:
 
         r = np.array(( 
                     (np.cos(angle), -np.sin(angle)),
@@ -135,7 +163,16 @@ class Displacement:
 
         return r.dot(x)
 
-    def from_drift(self, c, w):
+    def from_drift(self, c: np.ndarray, w: np.ndarray):
+        """Generate displacement due to only drifting with the winds and currents. 
+
+        Args:
+            c (np.ndarray): Current velocity
+            w (np.ndarray): Wind velocity
+
+        Returns:
+            Displacement: The Displacement instance
+        """
 
         # Calculate the drift due to the currents
         dxy_c = c * self.dt
@@ -171,7 +208,20 @@ class Displacement:
 
         return self
 
-    def from_paddling(self, c, w, position, target, speed):
+    def from_paddling(self, c: np.ndarray, w: np.ndarray, position: np.ndarray, target: np.ndarray, speed: float):
+        """Generate displacement due to paddling with a certain paddling speed, as well as environmental factors from
+        currents and winds.
+
+        Args:
+            c (np.ndarray): Current velocity
+            w (np.ndarray): Wind velocity
+            position (np.ndarray): Current position coordinates
+            target (np.ndarray): Destination position coordinates
+            speed (float): Paddling speed
+
+        Returns:
+            Displacement: The Displacement instance
+        """
 
         # Calculate the bearing from the current position to the target
         a = geo.bearing_from_lonlat(position, target)
@@ -187,7 +237,21 @@ class Displacement:
 
         return self
 
-    def from_sailing(self, c, w, position, target):
+    def from_sailing(self, c: np.ndarray, w: np.ndarray, position: np.ndarray, target: np.ndarray):
+        """Generate displacement due to sailing, reinforcing the wind speed contribution over the currents.
+
+        Args:
+            c (np.ndarray): Current velocity
+            w (np.ndarray): Wind velocity
+            position (np.ndarray): Current position coordinates
+            target (np.ndarray): Destination position coordinates
+
+        Raises:
+            ValueError: Raised if the angle between the bearing and reference is a non-positive number
+
+        Returns:
+            Displacement: The Displacement instance
+        """
 
         position = np.array(position)
         target   = np.array(target)
@@ -231,7 +295,7 @@ class Displacement:
         elif b > 110:
             sailing_velocity = wf_110_120 
         else:
-            raise ValueError
+            raise ValueError(f"Invalid angle b={b}")
 
         sailing_velocity *= w_abs
 
@@ -242,9 +306,6 @@ class Displacement:
             displacement = np.cos(tacking)*sailing_velocity*self.dt
 
         dxy_sailing = displacement * np.array([-np.sin(a), np.cos(a)])
-        
-        # print("displacement from sailing:", dxy_sailing)
-        # print("sailing velocity:", sailing_velocity)
 
 
         self.dxy = dxy_sailing + dxy_c
@@ -279,7 +340,7 @@ class Displacement:
 
         return si * 1.94
 
-    def with_uncertainty(self, sigma=1):
+    def with_uncertainty(self, sigma=1) -> np.ndarray:
         """Adds normal distributed noise to the current position.
 
         Args:
@@ -302,6 +363,17 @@ class Displacement:
         
         return self.dxy / 1e3
 
-    def to_lonlat(self, dx: float, dy: float, longitude: float, latitude: float):
+    def to_lonlat(self, dx: float, dy: float, longitude: float, latitude: float) -> Tuple[float, float]:
+        """Convenience function to convert a displacement into longitude and latitude
+
+        Args:
+            dx (float): Displacement in x-axis
+            dy (float): Displacement in y-axis
+            longitude (float): Longitudinal displacement
+            latitude (float): Latitudinal displacement
+
+        Returns:
+            Tuple[float, float]: A tuple of the longitude and latitude
+        """
 
         return geo.lonlat_from_displacement(dx, dy, (longitude, latitude))

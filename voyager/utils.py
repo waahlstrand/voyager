@@ -4,11 +4,21 @@ import os
 import glob
 import xarray as xr
 import pandas as pd
-from typing import List
+from typing import *
 
-from . import geo
+from .vessel import Vessel
 
-def lonlat_from_displacement(dx, dy, origin):
+def lonlat_from_displacement(dx: float, dy: float, origin: Tuple[float, float]) -> Tuple[float, float]:
+    """Calculate a new longitude and latitude from a displacement from an origin, using the Great Circle Approximation.
+
+    Args:
+        dx (float): Displacement in x-axis
+        dy (float): Displacement in y-axis
+        origin (Tuple[float, float]): Origin in longitude-latitude, WGS84
+
+    Returns:
+        Tuple[float, float]: New coordinates in longitude-latitude, WGS84
+    """
 
     longitude, latitude = origin
 
@@ -19,7 +29,16 @@ def lonlat_from_displacement(dx, dy, origin):
 
     return np.asscalar(new_longitude), np.asscalar(new_latitude)
 
-def normalize_longitude(lon):
+def normalize_longitude(lon: np.ndarray) -> np.ndarray:
+    """Normalize the longitude such that longitudinal degrees left of the prime meridian count as the east, 
+    and the degrees right of the meridian count as the west. Used to normalize data from ECMWF vs CMEMS.
+
+    Args:
+        lon (nd.array): An array of longitudinal degrees
+
+    Returns:
+        np.ndarray: A normalized array of longitudinal degrees
+    """
 
     east = lon[np.where((lon >= 0) & (lon <= 180))]
 
@@ -27,16 +46,6 @@ def normalize_longitude(lon):
 
     return np.concatenate([east, west])
 
-def get_departure_points(mask, longitude, latitude, offset=-1):
-
-    mask[:,-1] = np.nan
-
-    lon_coords = np.argmax(mask, axis=0) 
-
-    lon_points = longitude[lon_coords]+offset
-    lat_points = latitude[::-1]
-
-    return np.vstack((lon_points, lat_points)).T
 
 def save_to_GeoJSON(data, filename):
 
@@ -46,7 +55,18 @@ def save_to_GeoJSON(data, filename):
         json.dump(format_dict, file, indent=4)
 
 
-def to_GeoJSON(vessel, start_date, stop_date, dt):
+def to_GeoJSON(vessel: Vessel, start_date: str, stop_date: str, dt: float) -> Dict:
+    """Converts vessel data into a GeoJSON representation
+
+    Args:
+        vessel (Vessel): A Vessel object
+        start_date (str): The start date of the trajectory
+        stop_date (str): The end date of the trajectory
+        dt (float): Timestep
+
+    Returns:
+        Dict: A dictionary compliant with GeoJSON
+    """
 
     format_dict = {"type": "FeatureCollection",
                    "features": []
@@ -76,35 +96,15 @@ def to_GeoJSON(vessel, start_date, stop_date, dt):
     return format_dict
 
 
-# def to_GeoJSON(data):
+def ecmwf_to_xr(winds: xr.Dataset) -> xr.Dataset:
+    """Normalizes the ECMWF data into a standard XArray format.
 
-#     format_dict = {"type": "FeatureCollection",
-#                    "features": []}
+    Args:
+        winds (xr.Dataset): Winds as a Dataset
 
-#     for date_key, vessels in data.items():
-#         # print(date_key, vessels)
-
-#         for vessel in vessels:
-
-#             d = {"type": "Feature", 
-#                 "geometry": {
-#                     "type": "LineString",
-#                     "coordinates": vessel.trajectory
-#                 },
-#                 "properties": {
-#                     "date": date_key,
-#                     "number of points": len(vessel.trajectory),
-#                     "distance": vessel.distance,
-#                     "mean speed": vessel.mean_speed
-#                 }}
-
-#             format_dict["features"].append(d)  
-
-#     return format_dict                
-
-
-
-def ecmwf_to_xr(winds):
+    Returns:
+        xr.Dataset: Winds as a normalized Dataset
+    """
 
     # Change order of indexation, strictly ascending coordinates
     # longitude from -180 to +180
@@ -119,8 +119,15 @@ def ecmwf_to_xr(winds):
 
     return winds
 
-def cmems_to_xr(currents):
+def cmems_to_xr(currents: xr.Dataset) -> xr.Dataset:
+    """Normalizes the ECMWF data into a standard XArray format.
 
+    Args:
+        currents (xr.Dataset): Currents as a Dataset
+
+    Returns:
+        xr.Dataset: Currents as a normalized Dataset
+    """
     # Remove single value in depth dimension
     # Change variable names
     currents = currents.drop("depth")\
@@ -131,7 +138,24 @@ def cmems_to_xr(currents):
 
     return currents
 
-def load_data(start: pd.Timestamp, end: pd.Timestamp, bbox, data_directory, source, parallel=False):
+def load_data(start: pd.Timestamp, end: pd.Timestamp, bbox: List, data_directory: str, source: str, parallel=False) -> Tuple[xr.DataArray, xr.DataArray]:
+    """Reads the wind and current data from a directory with a specified structure, namely
+
+
+    Args:
+        start (pd.Timestamp): The start date 
+        end (pd.Timestamp): The end date
+        bbox (List): Bounding box of where to fetch data
+        data_directory (str): Root directory of the data files
+        source (str): Data source, either "currents" or "winds"
+        parallel (bool, optional): Whether to load the data in parallel. Defaults to False.
+
+    Raises:
+        ValueError: Raised if the data source is not "currents" or "winds"
+
+    Returns:
+        Tuple[xr.DataArray, xr.DataArray]: A tuple of the velocity x (east-west) and y (south-north) components respectively.
+    """
 
     start_year = start.year
     end_year   = end.year
@@ -150,12 +174,10 @@ def load_data(start: pd.Timestamp, end: pd.Timestamp, bbox, data_directory, sour
         filenames.extend(glob.glob(pattern))
 
     if source == "currents":
-        # data = cmems_to_xr(filenames) 
         data = xr.open_mfdataset(filenames, parallel=parallel)
         data = cmems_to_xr(data)
 
     elif source == "winds":
-        # data = ecmwf_to_xr(filenames)
         data = xr.open_mfdataset(filenames, parallel=parallel)
         data = ecmwf_to_xr(data)
 

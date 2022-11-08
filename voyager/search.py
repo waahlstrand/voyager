@@ -7,24 +7,65 @@ T = TypeVar('T')
 Position = Tuple[int, int]
 
 def heuristic(a: Position, b: Position) -> float:
+    """Distance measure between two positions.
+
+    Args:
+        a (Position): Current position
+        b (Position): Other position
+
+    Returns:
+        float: A measure of the distance between the points
+    """
+    
     (x1, y1) = a
     (x2, y2) = b
     return abs(x1 - x2) + abs(y1 - y2)
 
 class Grid:
+    """
+    Represents the map as an approximately equidistant grid, with methods to find if
+    the current position is in bounds, if there are obstacles "walls", and which are the closest places to go,
+    """
     def __init__(self, width: int, height: int):
         self.width = width
         self.height = height
         self.walls: List[Position] = []
     
     def in_bounds(self, id: Position) -> bool:
+        """Checks if the current position is in bounds of the map.
+
+        Args:
+            id (Position): Current position
+
+        Returns:
+            bool: Whether position is in bounds
+        """
         (x, y) = id
         return 0 <= x < self.width and 0 <= y < self.height
     
     def passable(self, id: Position) -> bool:
+        """Checks if the current position has any obstacles, so called "walls". 
+
+        Args:
+            id (Position): Current position
+
+        Returns:
+            bool: Whether the position is passable, or if it has walls
+        """
         return id not in self.walls
     
     def neighbors(self, id: Position) -> Iterator[Position]:
+        """Calculates the traversable neighbours of the current position as an iterator
+
+        Args:
+            id (Position): Current position
+
+        Returns:
+            Position: A traversable neighbour to the current position
+
+        Yields:
+            Iterator[Position]: An iterator with the traversable neighbours
+        """
         (x, y) = id
         # neighbors = [(x+1, y), (x-1, y), (x, y-1), (x, y+1)] # E W N S
         neighbors = [(x+1, y), (x-1, y), (x, y+1), (x, y-1), (x+1, y+1), (x-1, y-1), (x+1, y-1), (x-1, y+1)]
@@ -35,6 +76,12 @@ class Grid:
         return results
 
 class WeightedGrid(Grid):
+    """
+    The WeightedGrid is a Grid used to symbolize a map where not all positions are equally likely to traverse. Some are more likely,
+    these regions being weighted.
+    """
+
+
     def __init__(self, width: int, height: int):
         super().__init__(width, height)
         self.weights: Dict[Position, float] = {}
@@ -44,7 +91,15 @@ class WeightedGrid(Grid):
         return self.weights.get(to_node, 1)
 
     @classmethod
-    def from_map(cls, map, **kwargs):
+    def from_map(cls, map: np.ndarray, **kwargs):
+        """Generate a WeightedGrid from a numpy array, wehere the land is symbolized as NaN.
+
+        Args:
+            map (np.ndarray): An array with land as NaN
+
+        Returns:
+            WeightedGrid: A WeightedGrid instance
+        """
 
         map = map.values
 
@@ -59,7 +114,23 @@ class WeightedGrid(Grid):
         return grid
 
     @staticmethod
-    def create_shoreline_contour(mask, weights=[5, 0.5], iterations=[1, 4], kernel_size=3):
+    def create_shoreline_contour(mask: np.ndarray, weights=[5, 0.5], iterations=[1, 4], kernel_size=3) -> np.ndarray:
+        """Create a weight mask corresponding to the shoreline contour of the map.
+
+        The contours are created using dilation of the land for a number of iterations and a given kernel size. The result is 
+        a contour with a specific width, which is then assigned a specific weight.
+
+        This mimics the tendency to avoid close shorelines and open sea.
+
+        Args:
+            mask (np.ndarray): A mask symbolizing the land
+            weights (list, optional): A list of weights for each contour. Defaults to [5, 0.5].
+            iterations (list, optional): Number of iterations to broaden the contour. Defaults to [1, 4].
+            kernel_size (int, optional): The kernel size used for broadening of the contour. Defaults to 3.
+
+        Returns:
+            np.ndarray: A weighted array corresponding to a map with contours around the land
+        """
 
         kernel = np.ones((kernel_size, kernel_size), np.uint8)
         weighted_mask = np.ones(mask.shape)
@@ -72,13 +143,7 @@ class WeightedGrid(Grid):
             # Start at zero and add shorelines with weights
             weighted_mask[shoreline.astype(np.bool)] = weight
 
-        # immediate = cv2.dilate(mask, kernel, iterations=iterations[0]) 
-        # distant   = cv2.dilate(mask, kernel, iterations=iterations[1]) 
-
         # # Start at zero and add shorelines with weights
-
-        # weighted_mask[distant.astype(np.bool)] = weights[1]
-        # weighted_mask[immediate.astype(np.bool)] = weights[0]
         weighted_mask[mask.astype(np.bool)] = np.nan    
 
         return weighted_mask
@@ -111,7 +176,17 @@ class Astar:
         
         self.graph  = graph
 
-    def search(self, start: Position, goal: Position):
+    def search(self, start: Position, goal: Position) -> Tuple[Dict[Position, Position], Dict[Position, float]]:
+        """Find a route from a start position to a goal position.
+
+        Args:
+            start (Position): Start position
+            goal (Position): End position
+
+
+        Returns:
+            Tuple[Dict[Position, Position], Dict[Position, float]]: A dict as a graph pointing to the previous position, and the current cost of the route.
+        """
 
         frontier = PriorityQueue()
         frontier.put(start, 0)
@@ -141,6 +216,16 @@ class Astar:
     def reconstruct_path(self, came_from: Dict[Position, Position], 
                                start: Position, 
                                goal: Position) -> List[Position]:
+        """Reconstruct the route from the graph pointing to previous positions.
+
+        Args:
+            came_from (Dict[Position, Position]): Dictionary pointing from one position to another
+            start (Position): Start position
+            goal (Position): End position
+
+        Returns:
+            List[Position]: The resulting route as a list of positions
+        """
 
         current: Position = goal
         path = []

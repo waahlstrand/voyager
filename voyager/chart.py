@@ -7,6 +7,11 @@ from . import utils
 from . import search
 
 class Chart:
+    """
+    The Chart object symbolizes the map, including wind and current data, as well as the grid used for path finding.
+
+    A chart at any moment is a bounding box of the underlying available data at a specific date interval.
+    """
 
     def __init__(self, bbox, start_date, end_date) -> None:
         
@@ -24,7 +29,15 @@ class Chart:
         self.grid = None
 
 
-    def load(self, data_dir, **kwargs):
+    def load(self, data_dir: str, **kwargs):
+        """Loads the Chart data for dynamical updating. Updated the winds, currents and the weighted grid.
+
+        Args:
+            data_dir (str): The root directory of the velocity data
+
+        Returns:
+            Chart: The Chart instance
+        """
 
         self.data_dir = data_dir
 
@@ -53,7 +66,16 @@ class Chart:
 
         return self
 
-    def interpolate(self, date, duration):
+    def interpolate(self, date: pd.Timestamp, duration: int):
+        """Interpolates the loaded data for a certain timestamp, and a duration in days.
+
+        Args:
+            date (pd.Timestamp): Date to start interpolating from
+            duration (int): Duration of the interpolation in days
+
+        Returns:
+            Chart: The Chart instance
+        """
 
         end_date = date + pd.Timedelta(duration, 'D')
 

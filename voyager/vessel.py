@@ -1,7 +1,7 @@
 
-from . import geo, search
+from . import geo, search, chart
 import numpy as np
-import yaml
+from typing import *
 
 class Vessel:
 
@@ -38,7 +38,25 @@ class Vessel:
 
 
     @classmethod
-    def from_position(cls, point, chart=None, destination=None, interval=5, **kwargs):
+    def from_position(cls, point: Tuple[float, float], chart: chart.Chart = None, destination: Tuple[float, float] = None, interval: int =5, **kwargs):
+        """Creates a vessel from a start position, using a pre-supplied Chart object and destination.
+        The chart and interval parameters are used to create a route from the start position and the destination, the interval
+        deciding the number of milestones along the way.
+
+        Args:
+            point (Tuple[float, float]): Start position
+            chart (chart.Chart, optional): A Chart object. Defaults to None.
+            destination (Tuple[float, float], optional): Destination position. Defaults to None.
+            interval (int, optional): Interval to create route targets. Defaults to 5.
+
+        Raises:
+            RuntimeError: Raised if there is no possible route between start and end
+
+        Returns:
+            Vessel: A Vessel instance
+        """
+        
+
         x, y = point
 
         if (destination is not None) and (chart is not None):
@@ -62,7 +80,6 @@ class Vessel:
                 route.reverse()
 
             except Exception as e:
-                print("No possible route.")
                 raise RuntimeError("No possible route") from e
 
 
@@ -78,8 +95,20 @@ class Vessel:
 
 
     @classmethod
-    def from_positions(cls, points, chart=None, destination=None, interval=5, **kwargs):
-        
+    def from_positions(cls, points: List[Tuple[float, float]], chart: chart.Chart = None, destination: Tuple[float, float] = None, interval: int = 5, **kwargs) -> List:
+        """Generates a list of vessels from multiple positions.
+            The chart and interval parameters are used to create a route from the start position and the destination, the interval
+            deciding the number of milestones along the way.
+
+        Args:
+            points (List[Tuple[float, float]]): List of positions
+            chart (chart.Chart, optional): A chart object. Defaults to None.
+            destination (Tuple[float, float], optional): Destination coordinates in WGS84. Defaults to None.
+            interval (int, optional): Interval to create route targets. Defaults to 5.
+
+        Returns:
+            List: List of Vessel instances
+        """
         vessels = []
         for point in points:
 
@@ -90,7 +119,7 @@ class Vessel:
 
         return vessels
 
-    def update_position(self, x, y):
+    def update_position(self, x: float, y: float):
         """Updates position and records it to the trajectory
 
         Args:
@@ -106,7 +135,7 @@ class Vessel:
 
         return self
 
-    def update_distance(self, dx, dy):
+    def update_distance(self, dx: float, dy: float):
         """Updates the cumulative distance travelled for the trajectory
 
         Args:
@@ -118,7 +147,7 @@ class Vessel:
 
         return self
 
-    def update_mean_speed(self, dt):
+    def update_mean_speed(self, dt: float):
         """Updates the total mean speed of the trajectory
         from the total distance travelled.
 
@@ -131,7 +160,17 @@ class Vessel:
 
         return self
 
-    def has_arrived(self, longitude, latitude, target_tol):
+    def has_arrived(self, longitude: float, latitude: float, target_tol: float) -> bool:
+        """Calculates whether the vessel has arrived to its destination with in a certain tolerance.
+
+        Args:
+            longitude (float): Longutide
+            latitude (float): Latitude
+            target_tol (float): Distance tolerance away from the target destination
+
+        Returns:
+            bool: Whether the vessel has arrived or not
+        """
 
         is_close = geo.distance((longitude, latitude), self.target) <= target_tol
 

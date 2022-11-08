@@ -15,12 +15,31 @@ class Model:
         self.tolerance = tolerance
 
     def use(self, chart: Chart):
+        """Use a supplied chart object of winds and currents.
+
+        Args:
+            chart (Chart): A Chart object with winds and currents
+
+        Returns:
+            Model: The Model instance
+        """
 
         self.chart = chart
 
         return self
 
-    def velocity(self, t, longitude, latitude):
+    def velocity(self, t, longitude, latitude) -> Tuple[np.ndarray, np.ndarray]:
+        """Calculate a tuple of (current, wind) velocities at a specific time and set of
+        WGS84 coordinates through interpolation.
+
+        Args:
+            t (float): time
+            longitude (float): Longitude (WGS84)
+            latitude (float): Latitude (WGS84)
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: The current and wind velocities respectively
+        """
 
         assert self.chart != None
 

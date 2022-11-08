@@ -1,10 +1,8 @@
 import geopy.distance as gp
 import numpy as np
 import math
+from typing import *
 
-# def route_to_lonlat(route, map):
-
-#     return [map.longitude[]]
 
 def closest_coordinate_index(array, value):
 
@@ -14,7 +12,7 @@ def closest_coordinate_index(array, value):
     else:
         return idx
 
-def lonlat_from_displacement(dx, dy, origin, method='geodesic'):
+def lonlat_from_displacement(dx: float, dy: float, origin: Tuple[float, float], method='geodesic') -> Tuple[float, float]:
 
     if method == 'geodesic': 
 
@@ -77,7 +75,7 @@ def bearing_from_displacement(dx, dy):
 
     return bearing
 
-def bearing_from_lonlat(position, target):
+def bearing_from_lonlat(position: np.ndarray, target: np.ndarray):
 
     lat_pos = np.deg2rad(position[1])
     lat_tgt = np.deg2rad(target[1])
