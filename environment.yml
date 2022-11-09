@@ -1,0 +1,19 @@
+name: voyager
+channels:
+  - conda-forge
+  - anaconda
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - pandas
+  - numpy
+  - pyyaml
+  - xarray
+  - opencv-python
+  - geopy
+  - scipy
+  - dask
+  - netcdf4
+  - geopandas
+  - cartopy

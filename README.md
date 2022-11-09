@@ -23,13 +23,38 @@ scipy
 dask
 netcdf4
 ```
-To use the tool, you also need data on winds and sea currents in netcdf format.
+To use the tool, you also need data on winds and sea currents in netcdf format. The data directory should be structured in the following format:
+
+```bash
+├── winds
+│   ├── 1998
+│   └── 1999
+        ├── 01.nc
+        ├── 02.nc
+        ├── 03.nc
+        .
+        .
+        .
+        └── 12.nc
+    ...
+└── currents
+│   ├── 1998
+│   └── 1999
+        ├── 01.nc
+        ├── 02.nc
+        ├── 03.nc
+        .
+        .
+        .
+        └── 12.nc
+    ...
+```
 
 
 ## Installation
 To install, download or clone the repository, follow these instructions:
 
-1. Ensure you have a functional Python instance (``python>=3.6``)
+1. Ensure you have a functional Python instance (``python>=3.6``) or have a virtual environment (like *venv* or *conda*) with Python activated.
 2. Clone or download the repository, for example with
 
 ```bash
@@ -39,6 +64,17 @@ git clone https://github.com/waahlstrand/voyager
 ```bash
 python setup.py install
 ```
+
+## Demo script
+To run the demonstration script you need to install the packages `cartopy` and `geopandas` as well. These have some binary dependencies that are easiest installed with [conda](https://docs.conda.io/en/latest/).
+
+The demo generates two images illustrating a random sample trajectory in the North Sea, and the corresponding shorelines used for visualizing the pathfinding algorithm.
+
+![Random generated trajectory](images/route.png)
+![Shorelines used for pathfinding for the above trajectory](images/shorelines.png)
+
+
+
 
 ## Author
 This package was implemented and designed by Victor Wåhlstrand Skärström, as part of the Centre for Digital Humanities at the University of Gothenburg.
