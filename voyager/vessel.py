@@ -191,3 +191,43 @@ class Vessel:
             "mean_speed": self.mean_speed,
             "destination": self.destination
         }
+
+    def to_GeoJSON(self, start_date: str, stop_date: str, dt: float) -> Dict:
+        """Converts vessel data into a GeoJSON representation
+
+        Args:
+            vessel (Vessel): A Vessel object
+            start_date (str): The start date of the trajectory
+            stop_date (str): The end date of the trajectory
+            dt (float): Timestep
+
+        Returns:
+            Dict: A dictionary compliant with GeoJSON
+        """
+
+        format_dict = {"type": "FeatureCollection",
+                    "features": []
+                    }
+
+        format_dict["features"].append(
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "LineString",
+                    # "coordinates": [[y, x] for x, y in vessel.trajectory],
+                    "coordinates": self.trajectory,
+
+                },
+                "properties": {
+                    "start_date": start_date,
+                    "stop_date": stop_date,
+                    "timestep": dt,
+                    "distance": self.distance,
+                    "mean_speed": self.mean_speed,
+                    "destination": self.destination,
+                    "route": self.route_taken
+                }          
+            }
+        )
+
+        return format_dict

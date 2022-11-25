@@ -6,8 +6,6 @@ import xarray as xr
 import pandas as pd
 from typing import *
 
-from .vessel import Vessel
-
 def lonlat_from_displacement(dx: float, dy: float, origin: Tuple[float, float]) -> Tuple[float, float]:
     """Calculate a new longitude and latitude from a displacement from an origin, using the Great Circle Approximation.
 
@@ -53,47 +51,6 @@ def save_to_GeoJSON(data, filename):
 
     with open(filename, 'w') as file:
         json.dump(format_dict, file, indent=4)
-
-
-def to_GeoJSON(vessel: Vessel, start_date: str, stop_date: str, dt: float) -> Dict:
-    """Converts vessel data into a GeoJSON representation
-
-    Args:
-        vessel (Vessel): A Vessel object
-        start_date (str): The start date of the trajectory
-        stop_date (str): The end date of the trajectory
-        dt (float): Timestep
-
-    Returns:
-        Dict: A dictionary compliant with GeoJSON
-    """
-
-    format_dict = {"type": "FeatureCollection",
-                   "features": []
-                   }
-
-    format_dict["features"].append(
-        {
-            "type": "Feature",
-            "geometry": {
-                "type": "LineString",
-                # "coordinates": [[y, x] for x, y in vessel.trajectory],
-                "coordinates": vessel.trajectory,
-
-            },
-            "properties": {
-                "start_date": start_date,
-                "stop_date": stop_date,
-                "timestep": dt,
-                "distance": vessel.distance,
-                "mean_speed": vessel.mean_speed,
-                "destination": vessel.destination,
-                "route": vessel.route_taken
-            }          
-        }
-    )
-
-    return format_dict
 
 
 def ecmwf_to_xr(winds: xr.Dataset) -> xr.Dataset:

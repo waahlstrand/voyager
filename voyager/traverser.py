@@ -125,7 +125,7 @@ class Traverser:
         start_date_str = chart.start_date.strftime('%Y-%m-%d')
         stop_date_str  = (chart.start_date + pd.Timedelta(len(vessel.trajectory)*timestep, unit='s')).strftime('%Y-%m-%d')
 
-        return utils.to_GeoJSON(vessel, start_date_str, stop_date_str, timestep)
+        return vessel.to_GeoJSON(start_date_str, stop_date_str, timestep)
 
 
 

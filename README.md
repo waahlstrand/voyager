@@ -66,7 +66,7 @@ python setup.py install
 ```
 
 ## Demo script
-To run the demonstration script you need to install the packages `cartopy` and `geopandas` as well. These have some binary dependencies that are easiest installed with [conda](https://docs.conda.io/en/latest/).
+To run the demonstration script you need to install the packages `cartopy` and `geopandas` as well. These have some binary dependencies that are easiest installed with [conda](https://docs.conda.io/en/latest/). You can use the `environment.yml` file to initialize such a conda environment.
 
 The demo generates two images illustrating a random sample trajectory in the North Sea, and the corresponding shorelines used for visualizing the pathfinding algorithm.
 
